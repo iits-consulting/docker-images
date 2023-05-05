@@ -39,4 +39,4 @@ jobs:
         with:
           cosign_key: "${{ secrets.COSIGN_KEY }}"
           images: ${{ steps.image_list.outputs.images }}
-          destination_base_url: ghcr.io/mattiascockburn
+          destination_base_url: ghcr.io/${{ github.repository_owner }}
