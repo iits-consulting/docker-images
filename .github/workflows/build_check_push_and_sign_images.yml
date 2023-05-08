@@ -31,7 +31,7 @@ jobs:
         run: echo matrix=${{ steps.get_changed_images.outputs.all_changed_files }} >> $GITHUB_OUTPUT
 
   build-check-push:
-    uses: .github/workflows/helper_build_check_push_sign_image.yml
+    uses: .github/workflows/helper_build_check_push_sign_image.yml@main
     name: Build Check & Push changed images
     needs: get-changed-images
     if: ${{ needs.get-changed-images.outputs.matrix != '' && toJson(fromJson(needs.get-changed-images.outputs.matrix)) != '[]' }}
