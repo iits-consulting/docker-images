@@ -1,0 +1,82 @@
+name: Build Check and Push images
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  get-changed-images:
+    name: Find changed images
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: "${{ steps.get_changed_images_folders.outputs.matrix }}"
+    steps:
+      - uses: actions/checkout@v1
+      - name: Get changed images
+        id: get_changed_images
+        uses: tj-actions/changed-files@v35.9.1
+        with:
+          json: true
+          files: |
+            ./iits-images/*/version.txt
+          dir_names: true
+          dir_names_exclude_root: true
+          dir_names_max_depth: 2
+
+      - name: Echo changed files
+        id: get_changed_images_folders
+        run: echo matrix=${{ steps.get_changed_images.outputs.all_changed_files }} >> $GITHUB_OUTPUT
+
+  build-check-push:
+    runs-on: ubuntu-latest
+    name: Build Check & Push changed images
+    needs: get-changed-images
+    if: ${{ needs.get-changed-images.outputs.matrix != '' && toJson(fromJson(needs.get-changed-images.outputs.matrix)) != '[]' }}
+    strategy:
+      matrix:
+        chart: ${{fromJSON(needs.get-changed-images.outputs.matrix)}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build Docker image
+        run: docker build -t my-image:latest "${{ matrix.chart }}"
+      - name: Hadolint Action
+        uses: hadolint/hadolint-action@v1.5.0
+        with:
+          dockerfile: "${{ matrix.chart }}/Dockerfile"
+          failure-threshold: ignore
+
+      - name: Parse Image Name
+        shell: bash
+        run: echo "image_name=$(basename ${{matrix.chart }})" >> "$GITHUB_OUTPUT"
+
+      - name: Parse Image Version
+        shell: bash
+        run: echo "image_version=$(jq '.version' ${{ matrix.chart}}/version.json -r)" >> "$GITHUB_OUTPUT"
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-image:latest'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ !github.event.act }} # skip during local actions testing
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results.sarif'
+      - name: Login to GitHub Content Repository
+        if: ${{ !github.event.act }} # skip during local actions testing
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
