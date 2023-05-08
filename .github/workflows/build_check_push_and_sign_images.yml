@@ -21,7 +21,7 @@ jobs:
         with:
           json: true
           files: |
-            ./iits-images/*/version.json
+            ./iits-images/**
           dir_names: true
           dir_names_exclude_root: true
           dir_names_max_depth: 2
