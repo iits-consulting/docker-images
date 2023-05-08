@@ -17,7 +17,7 @@ ARG IMAGE_USER
 USER root
 RUN apk update && apk add --no-cache \
     "bash=~5.1" \
-    "curl=~7.83" \
+    "curl=~8.0" \
     "git=~2.36" \
     "less=~590" \
     "openssh=~9.0" \
