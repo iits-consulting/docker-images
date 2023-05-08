@@ -37,7 +37,7 @@ jobs:
           echo "image_tag=$IMAGE_NAME:$IMAGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker image
-        run: docker build -t "${{ steps.parse_image_tag.outputs.image_tag }}" "${{ input.target-directory }}"
+        run: docker build -t "${{ steps.parse_image_tag.outputs.image_tag }}" "${{ inputs.target-directory }}"
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
