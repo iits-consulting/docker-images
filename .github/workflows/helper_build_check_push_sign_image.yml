@@ -25,18 +25,16 @@ jobs:
       - name: Hadolint Action
         uses: hadolint/hadolint-action@v1.5.0
         with:
-          dockerfile: "${{ matrix.chart }}/Dockerfile"
+          dockerfile: "${{ inputs.target-directory }}/Dockerfile"
           failure-threshold: ignore
 
       - name: Parse Docker Tag
         id: parse_image_tag
         shell: bash
         run: |
-          IMAGE_VERSION="$(jq '.version' ${{ matrix.chart}}/build-info.json -r)" 
-          IMAGE_NAME="$(basename ${{matrix.chart }})"
+          IMAGE_VERSION="$(jq '.version' ${{ inputs.target-directory}}/build-info.json -r)" 
+          IMAGE_NAME="$(basename ${{inputs.target-directory }})"
           echo "image_tag=$IMAGE_NAME:$IMAGE_VERSION" >> "$GITHUB_OUTPUT"
-
-
 
       - name: Build Docker image
         run: docker build -t "${{ steps.parse_image_tag.outputs.image_tag }}" "${{ env.target-directory }}"
