@@ -14,6 +14,9 @@
                   <Item>
                     <option name="path" value=".github/workflows/build_check_push_and_sign_images.yml" />
                   </Item>
+                  <Item>
+                    <option name="path" value=".github/workflows/helper_build_check_push_sign_image.yml" />
+                  </Item>
                 </list>
               </option>
             </SchemaInfo>

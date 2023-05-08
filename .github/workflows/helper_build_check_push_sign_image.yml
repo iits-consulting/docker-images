@@ -1,0 +1,68 @@
+on:
+  workflow_call:
+    inputs:
+      target-directory:
+        required: true
+        type: string
+
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  reusable_workflow_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Hadolint Action
+        uses: hadolint/hadolint-action@v1.5.0
+        with:
+          dockerfile: "${{ matrix.chart }}/Dockerfile"
+          failure-threshold: ignore
+
+      - name: Parse Docker Tag
+        id: parse_image_tag
+        shell: bash
+        run: |
+          IMAGE_VERSION="$(jq '.version' ${{ matrix.chart}}/build-info.json -r)" 
+          IMAGE_NAME="$(basename ${{matrix.chart }})"
+          echo "image_tag=$IMAGE_NAME:$IMAGE_VERSION" >> "$GITHUB_OUTPUT"
+
+
+
+      - name: Build Docker image
+        run: docker build -t "${{ steps.parse_image_tag.outputs.image_tag }}" "${{ env.target-directory }}"
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ steps.parse_image_tag.outputs.image_tag }}"
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: ${{ !github.event.act }} # skip during local actions testing
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Login to GHCR
+        if: ${{ !github.event.act }} # skip during local actions testing
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Image to GHCR
+        if: ${{ !github.event.act }} # skip during local actions testing
+        run: docker push "${{ steps.parse_image_tag.outputs.image_tag }}"
