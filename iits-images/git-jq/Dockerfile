@@ -4,7 +4,8 @@ ARG IMAGE_USER=git-jq
 # FROM $CI_REGISTRY/$CI_PROJECT_PATH/alpine:3.16.0 as base
 FROM alpine:3.16.0 as base
 ARG IMAGE_USER
-# hadolint ignore=DL3018,DL3017
+# hadolint ignore=DL3018
+# hadolint ignore=DL3017
 RUN apk update --no-cache && \
     apk upgrade --available --no-cache && \
     addgroup -S $IMAGE_USER && \
