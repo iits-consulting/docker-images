@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'iits-images/*/version.txt'
+      - 'iits-images/*/version.json'
 
 jobs:
 
