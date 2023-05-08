@@ -34,7 +34,7 @@ jobs:
         run: |
           IMAGE_VERSION="$(jq '.version' ${{ inputs.target-directory}}/build-info.json -r)" 
           IMAGE_NAME="$(basename ${{inputs.target-directory }})"
-          echo "image_tag=$IMAGE_NAME:$IMAGE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "image_tag=ghcr.io/iits-consulting/$IMAGE_NAME:$IMAGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker image
         run: docker build -t "${{ steps.parse_image_tag.outputs.image_tag }}" "${{ inputs.target-directory }}"
