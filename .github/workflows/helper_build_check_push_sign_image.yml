@@ -5,6 +5,10 @@ on:
         required: true
         type: string
 
+    secrets:
+      GHCR_PASSWORD:
+        required: true
+
 
 jobs:
   reusable_workflow_job:
@@ -58,7 +62,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PASSWORD }}
 
       - name: Push Image to GHCR
         if: ${{ !github.event.act }} # skip during local actions testing

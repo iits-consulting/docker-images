@@ -40,4 +40,5 @@ jobs:
         chart: ${{fromJSON(needs.get-changed-images.outputs.matrix)}}
     with:
       target-directory: "${{ matrix.chart }}"
-    secrets: inherit
+    secrets:
+      GHCR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
